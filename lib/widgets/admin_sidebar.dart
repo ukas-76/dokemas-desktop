@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/user_model.dart';
 import '../theme/app_theme.dart';
 
 /// Model for each sidebar navigation item
@@ -14,19 +15,24 @@ class NavItem {
 class AdminSidebar extends StatelessWidget {
   final int activeIndex;
   final ValueChanged<int> onItemTapped;
+  final UserModel? currentUser;
+  final VoidCallback? onLogout;
 
   const AdminSidebar({
     super.key,
     required this.activeIndex,
     required this.onItemTapped,
+    this.currentUser,
+    this.onLogout,
   });
 
   static const List<NavItem> _navItems = [
     NavItem(icon: Icons.dashboard_rounded, label: 'Beranda', index: 0),
     NavItem(icon: Icons.hotel_rounded, label: 'Kelola Wisata & Hotel', index: 1),
-    NavItem(icon: Icons.verified_user_rounded, label: 'Verifikasi Mitra', index: 2),
-    NavItem(icon: Icons.rate_review_rounded, label: 'Moderasi Ulasan', index: 3),
-    NavItem(icon: Icons.bar_chart_rounded, label: 'Laporan & Statistik', index: 4),
+    NavItem(icon: Icons.people_alt_rounded, label: 'Kelola User & Mitra', index: 2),
+    NavItem(icon: Icons.verified_user_rounded, label: 'Verifikasi Mitra', index: 3),
+    NavItem(icon: Icons.rate_review_rounded, label: 'Moderasi Ulasan', index: 4),
+    NavItem(icon: Icons.bar_chart_rounded, label: 'Laporan & Statistik', index: 5),
   ];
 
   @override
@@ -142,6 +148,11 @@ class AdminSidebar extends StatelessWidget {
   }
 
   Widget _buildProfileArea() {
+    final String displayName = currentUser?.name.isNotEmpty == true
+        ? 'Halo, ${currentUser!.name.split(' ').first}!'
+        : 'Halo, Admin!';
+    final String displayRole = currentUser?.roleLabel ?? 'Super Admin';
+
     return Container(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -165,35 +176,42 @@ class AdminSidebar extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  'Halo, Admin!',
-                  style: TextStyle(
+                  displayName,
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.textPrimary,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  'Super Admin',
-                  style: TextStyle(
+                  displayRole,
+                  style: const TextStyle(
                     fontSize: 11,
                     color: AppTheme.textSecondary,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
           // Logout Icon
-          InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              child: const Icon(
-                Icons.logout_rounded,
-                size: 18,
-                color: AppTheme.textSecondary,
+          Tooltip(
+            message: 'Keluar dari Admin Panel',
+            child: InkWell(
+              onTap: onLogout,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  size: 18,
+                  color: AppTheme.accentRed,
+                ),
               ),
             ),
           ),

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'screens/admin_dashboard_screen.dart';
+import 'screens/login_screen.dart';
+import 'services/api_service.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ApiService.restoreSession();
   runApp(const DokemasAdminApp());
 }
 
@@ -21,12 +25,13 @@ class DokemasAdminApp extends StatelessWidget {
           brightness: Brightness.light,
         ),
         scaffoldBackgroundColor: const Color(0xFFF9FAFB),
-        // Remove all default blue focus colors
         focusColor: const Color(0xFF198754),
         highlightColor: Colors.transparent,
         splashColor: const Color(0xFFD1FAE5),
       ),
-      home: const AdminDashboardScreen(),
+      home: ApiService.isAuthenticated
+          ? const AdminDashboardScreen()
+          : const LoginScreen(),
     );
   }
 }

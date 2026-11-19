@@ -1,82 +1,40 @@
 import 'package:flutter/material.dart';
+import '../models/user_model.dart';
 import '../theme/app_theme.dart';
 
-// ═══════════════════════════════════════════════════════════
-//  PARTNER REVIEW ITEM MODEL
-// ═══════════════════════════════════════════════════════════
-class PartnerReviewItem {
-  final String name;
-  final String owner;
-  final String category;
-  final String statusLabel;
-  final Color statusColor;
-  final Color statusBg;
-  final IconData statusIcon;
-
-  const PartnerReviewItem({
-    required this.name,
-    required this.owner,
-    required this.category,
-    required this.statusLabel,
-    required this.statusColor,
-    required this.statusBg,
-    required this.statusIcon,
-  });
-}
-
-// ═══════════════════════════════════════════════════════════
-//  PARTNER REVIEW PANEL (Right column)
-// ═══════════════════════════════════════════════════════════
+/// Panel Kanan Beranda — Menampilkan Akun Mitra / Pengguna Terbaru dari Backend
 class PartnerReviewPanel extends StatelessWidget {
-  const PartnerReviewPanel({super.key});
+  final List<UserModel> users;
+  final bool isLoading;
+  final VoidCallback? onSeeAll;
+  final VoidCallback? onReviewUser;
 
-  static const List<PartnerReviewItem> _items = [
-    PartnerReviewItem(
-      name: 'Villa Pinus Sentul',
-      owner: 'Hendra Kusuma',
-      category: 'Penginapan & Resort',
-      statusLabel: 'Menunggu Review',
-      statusColor: AppTheme.accentAmber,
-      statusBg: AppTheme.accentAmberLight,
-      statusIcon: Icons.schedule_rounded,
-    ),
-    PartnerReviewItem(
-      name: 'Wisata Arung Jeram Kalibaru',
-      owner: 'Siti Rahayu',
-      category: 'Destinasi Petualangan',
-      statusLabel: 'Dokumen Lengkap',
-      statusColor: AppTheme.primaryGreen,
-      statusBg: AppTheme.primaryGreenSoft,
-      statusIcon: Icons.check_circle_rounded,
-    ),
-    PartnerReviewItem(
-      name: 'Kedai Kopi Lereng Merapi',
-      owner: 'Budi Santoso',
-      category: 'Kuliner & UMKM',
-      statusLabel: 'Verifikasi Izin',
-      statusColor: AppTheme.accentBlue,
-      statusBg: AppTheme.accentBlueLight,
-      statusIcon: Icons.verified_user_rounded,
-    ),
-  ];
+  const PartnerReviewPanel({
+    super.key,
+    this.users = const [],
+    this.isLoading = false,
+    this.onSeeAll,
+    this.onReviewUser,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final mitraOrRecent = users.where((u) => !u.isAdmin).take(3).toList();
+
     return Container(
       decoration: AppTheme.cardDecorationElevated,
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Row(
             children: [
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'TINJAUAN DOKUMEN',
+                    Text(
+                      'TINJAUAN MITRA & AKUN',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -84,36 +42,33 @@ class PartnerReviewPanel extends StatelessWidget {
                         letterSpacing: 1.0,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text('Permohonan\nMitra Terbaru',
-                        style: AppTheme.titleMD),
+                    SizedBox(height: 4),
+                    Text('Mitra & Pengguna\nTerbaru', style: AppTheme.titleMD),
                   ],
                 ),
               ),
               InkWell(
-                onTap: () {},
+                onTap: onSeeAll,
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: AppTheme.bgContent,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppTheme.borderColor),
                   ),
                   child: Row(
-                    children: const [
+                    children: [
                       Text(
-                        'Lihat Semua (5)',
-                        style: TextStyle(
+                        'Lihat Semua (${users.length})',
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppTheme.primaryGreen,
                         ),
                       ),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_ios_rounded,
-                          size: 10, color: AppTheme.primaryGreen),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: AppTheme.primaryGreen),
                     ],
                   ),
                 ),
@@ -123,8 +78,34 @@ class PartnerReviewPanel extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // Items
-          ..._items.map((item) => _PartnerCard(item: item)).toList(),
+          if (isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 48),
+              child: Center(child: CircularProgressIndicator(color: AppTheme.primaryGreen)),
+            )
+          else if (mitraOrRecent.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.bgContent,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.borderColor),
+              ),
+              child: const Center(
+                child: Text(
+                  'Belum ada data mitra atau pengguna non-admin di server.',
+                  style: AppTheme.bodySM,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          else
+            ...mitraOrRecent.map(
+              (u) => _PartnerCard(
+                user: u,
+                onTapReview: onReviewUser ?? onSeeAll ?? () {},
+              ),
+            ),
         ],
       ),
     );
@@ -132,12 +113,38 @@ class PartnerReviewPanel extends StatelessWidget {
 }
 
 class _PartnerCard extends StatelessWidget {
-  final PartnerReviewItem item;
+  final UserModel user;
+  final VoidCallback onTapReview;
 
-  const _PartnerCard({required this.item});
+  const _PartnerCard({
+    required this.user,
+    required this.onTapReview,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final bool isMitraActive = user.isMitra && user.isActive;
+    final Color statusColor = isMitraActive
+        ? AppTheme.primaryGreen
+        : !user.isActive
+            ? AppTheme.accentRed
+            : AppTheme.accentAmber;
+    final Color statusBg = isMitraActive
+        ? AppTheme.primaryGreenSoft
+        : !user.isActive
+            ? AppTheme.accentRedLight
+            : AppTheme.accentAmberLight;
+    final IconData statusIcon = isMitraActive
+        ? Icons.check_circle_rounded
+        : !user.isActive
+            ? Icons.pause_circle_outline_rounded
+            : Icons.schedule_rounded;
+    final String statusLabel = isMitraActive
+        ? 'Mitra Terverifikasi'
+        : !user.isActive
+            ? 'Menunggu Aktivasi'
+            : 'Perlu Verifikasi';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -149,10 +156,8 @@ class _PartnerCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top: thumbnail placeholder + name
           Row(
             children: [
-              // Thumbnail
               Container(
                 width: 44,
                 height: 44,
@@ -160,25 +165,33 @@ class _PartnerCard extends StatelessWidget {
                   color: AppTheme.primaryGreenLight,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.photo_library_rounded,
-                    size: 20, color: AppTheme.primaryGreen),
+                child: Center(
+                  child: Text(
+                    user.initials,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primaryGreen,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(width: 10),
-              // Name + owner
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.name,
+                      user.businessName?.isNotEmpty == true ? user.businessName! : user.name,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '${item.owner} • ${item.category}',
+                      '${user.email} • ${user.roleLabel}',
                       style: AppTheme.bodyXS,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -188,33 +201,31 @@ class _PartnerCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Bottom: status badge + review button
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: item.statusBg,
+                  color: statusBg,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    Icon(item.statusIcon, size: 12, color: item.statusColor),
+                    Icon(statusIcon, size: 12, color: statusColor),
                     const SizedBox(width: 4),
                     Text(
-                      item.statusLabel,
+                      statusLabel,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: item.statusColor,
+                        color: statusColor,
                       ),
                     ),
                   ],
                 ),
               ),
               const Spacer(),
-              _ReviewButton(onTap: () {}),
+              _ReviewButton(onTap: onTapReview),
             ],
           ),
         ],
@@ -247,13 +258,11 @@ class _ReviewButtonState extends State<_ReviewButton> {
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: _hovered
-                ? AppTheme.primaryGreenHover
-                : AppTheme.primaryGreen,
+            color: _hovered ? AppTheme.primaryGreenHover : AppTheme.primaryGreen,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Row(
-            children: const [
+          child: const Row(
+            children: [
               Text(
                 'Tinjau',
                 style: TextStyle(
@@ -271,4 +280,3 @@ class _ReviewButtonState extends State<_ReviewButton> {
     );
   }
 }
-

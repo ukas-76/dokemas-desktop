@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
+import '../models/dashboard_model.dart';
 import '../theme/app_theme.dart';
 
-// ═══════════════════════════════════════════════════════════
-//  STAT CARD MODEL
-// ═══════════════════════════════════════════════════════════
 class StatCardData {
   final IconData icon;
   final String badgeLabel;
@@ -24,9 +22,6 @@ class StatCardData {
   });
 }
 
-// ═══════════════════════════════════════════════════════════
-//  STAT CARD WIDGET
-// ═══════════════════════════════════════════════════════════
 class StatCard extends StatelessWidget {
   final StatCardData data;
 
@@ -40,7 +35,6 @@ class StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top row: icon + badge
           Row(
             children: [
               Container(
@@ -71,93 +65,107 @@ class StatCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          // Title
-          Text(data.title, style: AppTheme.bodyXS.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textSecondary,
-            letterSpacing: 0.5,
-          )),
+          Text(
+            data.title,
+            style: AppTheme.bodyXS.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textSecondary,
+              letterSpacing: 0.5,
+            ),
+          ),
           const SizedBox(height: 4),
-          // Value
           Text(
             data.value,
             style: const TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w800,
               color: AppTheme.textPrimary,
-              height: 1.1,
+              height: 1.15,
             ),
           ),
           const SizedBox(height: 8),
-          // Subtitle
-          Text(data.subtitle, style: AppTheme.bodySM),
+          Text(
+            data.subtitle,
+            style: AppTheme.bodySM,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  STAT CARDS ROW (4 cards grid)
-// ═══════════════════════════════════════════════════════════
 class StatCardsRow extends StatelessWidget {
-  const StatCardsRow({super.key});
+  final DashboardDataBundle? data;
+  final bool isLoading;
 
-  static const List<StatCardData> _cards = [
-    StatCardData(
-      icon: Icons.landscape_rounded,
-      badgeLabel: '+12 bulan ini',
-      badgeColor: AppTheme.primaryGreen,
-      badgeBg: AppTheme.primaryGreenSoft,
-      value: '142\nTempat',
-      title: 'TOTAL WISATA',
-      subtitle: 'Destinasi alam, budaya & edukasi aktif',
-    ),
-    StatCardData(
-      icon: Icons.hotel_rounded,
-      badgeLabel: '+8 baru terdaftar',
-      badgeColor: AppTheme.accentBlue,
-      badgeBg: AppTheme.accentBlueLight,
-      value: '328 Hotel\n& Villa',
-      title: 'TOTAL PENGINAPAN',
-      subtitle: 'Resort, homestay, dan hotel berbintang',
-    ),
-    StatCardData(
-      icon: Icons.verified_rounded,
-      badgeLabel: '98.4% kepatuhan',
-      badgeColor: AppTheme.primaryGreen,
-      badgeBg: AppTheme.primaryGreenSoft,
-      value: '1,280\nMitra',
-      title: 'MITRA TERVERIFIKASI',
-      subtitle: 'Pelaku UMKM, tour guide & pengelola',
-    ),
-    StatCardData(
-      icon: Icons.pending_actions_rounded,
-      badgeLabel: 'Perlu tindakan segera',
-      badgeColor: AppTheme.accentAmber,
-      badgeBg: AppTheme.accentAmberLight,
-      value: '5\nPermohonan',
-      title: 'PERLU DITINJAU',
-      subtitle: '3 pendaftaran tempat baru, 2 mitra',
-    ),
-  ];
+  const StatCardsRow({
+    super.key,
+    this.data,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      return Row(
-        children: _cards.asMap().entries.map((entry) {
-          return Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: entry.key == 0 ? 0 : 12,
-              ),
-              child: StatCard(data: entry.value),
-            ),
-          );
-        }).toList(),
-      );
-    });
+    final cards = [
+      StatCardData(
+        icon: Icons.landscape_rounded,
+        badgeLabel: isLoading
+            ? 'Memuat...'
+            : '${data?.popularDestinations ?? 0} populer',
+        badgeColor: AppTheme.primaryGreen,
+        badgeBg: AppTheme.primaryGreenSoft,
+        value: isLoading ? '...' : '${data?.totalDestinations ?? 0}\nDestinasi',
+        title: 'TOTAL DESTINASI',
+        subtitle: 'Destinasi wisata & penginapan aktif di DOKEMAS',
+      ),
+      StatCardData(
+        icon: Icons.category_rounded,
+        badgeLabel: isLoading
+            ? 'Memuat...'
+            : '${data?.totalFacilities ?? 0} fasilitas',
+        badgeColor: AppTheme.accentBlue,
+        badgeBg: AppTheme.accentBlueLight,
+        value: isLoading ? '...' : '${data?.totalCategories ?? 0}\nKategori',
+        title: 'KATEGORI & FASILITAS',
+        subtitle: 'Klasifikasi destinasi & sarana wisata Banyumas',
+      ),
+      StatCardData(
+        icon: Icons.groups_rounded,
+        badgeLabel: isLoading
+            ? 'Memuat...'
+            : '${data?.totalMitra ?? 0} mitra',
+        badgeColor: AppTheme.primaryGreen,
+        badgeBg: AppTheme.primaryGreenSoft,
+        value: isLoading ? '...' : '${data?.totalUsers ?? 0}\nPengguna',
+        title: 'USER & MITRA',
+        subtitle: 'Total akun wisatawan, mitra & pengelola terdaftar',
+      ),
+      StatCardData(
+        icon: Icons.rate_review_rounded,
+        badgeLabel: isLoading
+            ? 'Memuat...'
+            : (data != null && data!.averageRating > 0
+                ? '${data!.averageRating.toStringAsFixed(1)}★ rata-rata'
+                : 'Live API'),
+        badgeColor: AppTheme.accentAmber,
+        badgeBg: AppTheme.accentAmberLight,
+        value: isLoading ? '...' : '${data?.totalReviews ?? 0}\nUlasan',
+        title: 'ULASAN WISATAWAN',
+        subtitle: 'Total ulasan & masukan pengunjung masuk',
+      ),
+    ];
+
+    return Row(
+      children: cards.asMap().entries.map((entry) {
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(left: entry.key == 0 ? 0 : 12),
+            child: StatCard(data: entry.value),
+          ),
+        );
+      }).toList(),
+    );
   }
 }
-

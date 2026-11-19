@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-// ═══════════════════════════════════════════════════════════
-//  QUICK ACTION MODEL
-// ═══════════════════════════════════════════════════════════
 class QuickActionData {
   final IconData icon;
   final String title;
@@ -20,43 +17,49 @@ class QuickActionData {
   });
 }
 
-// ═══════════════════════════════════════════════════════════
-//  QUICK ACTIONS SECTION
-// ═══════════════════════════════════════════════════════════
 class QuickActionsSection extends StatelessWidget {
-  const QuickActionsSection({super.key});
+  final int reviewsCount;
+  final VoidCallback? onManageCategories;
+  final VoidCallback? onOpenReviews;
+  final VoidCallback? onOpenReports;
 
-  static final List<QuickActionData> _actions = [
-    QuickActionData(
-      icon: Icons.category_rounded,
-      title: 'Tambah Kategori Baru',
-      subtitle:
-          'Perluas klasifikasi destinasi dan jenis penginapan.',
-      actionLabel: 'Buka Pengaturan →',
-      onAction: () {},
-    ),
-    QuickActionData(
-      icon: Icons.rate_review_rounded,
-      title: 'Moderasi Ulasan Baru',
-      subtitle: 'Ada 14 ulasan pengunjung menunggu persetujuan.',
-      actionLabel: 'Buka Moderasi (14) →',
-      onAction: () {},
-    ),
-    QuickActionData(
-      icon: Icons.download_rounded,
-      title: 'Unduh Laporan Bulanan',
-      subtitle: 'Ekspor ringkasan performa dan PAD pariwisata format PDF & Excel.',
-      actionLabel: 'Unduh Berkas →',
-      onAction: () {},
-    ),
-  ];
+  const QuickActionsSection({
+    super.key,
+    this.reviewsCount = 0,
+    this.onManageCategories,
+    this.onOpenReviews,
+    this.onOpenReports,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final actions = [
+      QuickActionData(
+        icon: Icons.category_rounded,
+        title: 'Kelola Kategori Wisata',
+        subtitle: 'Tambah, ubah, atau perbarui klasifikasi destinasi Kabupaten Banyumas.',
+        actionLabel: 'Buka Pengaturan →',
+        onAction: onManageCategories,
+      ),
+      QuickActionData(
+        icon: Icons.rate_review_rounded,
+        title: 'Moderasi Ulasan Masuk',
+        subtitle: 'Terdapat $reviewsCount ulasan wisatawan yang tercatat di sistem.',
+        actionLabel: 'Buka Moderasi ($reviewsCount) →',
+        onAction: onOpenReviews,
+      ),
+      QuickActionData(
+        icon: Icons.bar_chart_rounded,
+        title: 'Laporan & Ekspor Data',
+        subtitle: 'Lihat ringkasan statistik destinasi dan ekspor berkas CSV.',
+        actionLabel: 'Buka Laporan →',
+        onAction: onOpenReports,
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section label
         const Text(
           'PINTASAN ADMINISTRATIF',
           style: TextStyle(
@@ -74,10 +77,8 @@ class QuickActionsSection extends StatelessWidget {
           style: AppTheme.bodySM,
         ),
         const SizedBox(height: 20),
-
-        // Cards row
         Row(
-          children: _actions.asMap().entries.map((entry) {
+          children: actions.asMap().entries.map((entry) {
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.only(left: entry.key == 0 ? 0 : 16),
@@ -109,53 +110,47 @@ class _QuickActionCardState extends State<_QuickActionCard> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       cursor: SystemMouseCursors.click,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppTheme.bgCard,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _hovered
-                ? AppTheme.primaryGreenLight
-                : AppTheme.borderColor,
+      child: GestureDetector(
+        onTap: widget.data.onAction,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppTheme.bgCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _hovered ? AppTheme.primaryGreenLight : AppTheme.borderColor,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: _hovered ? 0.07 : 0.03),
+                blurRadius: _hovered ? 16 : 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(_hovered ? 0.07 : 0.03),
-              blurRadius: _hovered ? 16 : 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Icon
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGreenSoft,
-                borderRadius: BorderRadius.circular(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryGreenSoft,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  widget.data.icon,
+                  size: 22,
+                  color: AppTheme.primaryGreen,
+                ),
               ),
-              child: Icon(
-                widget.data.icon,
-                size: 22,
-                color: AppTheme.primaryGreen,
-              ),
-            ),
-            const SizedBox(height: 14),
-            // Title
-            Text(widget.data.title, style: AppTheme.titleMD),
-            const SizedBox(height: 6),
-            // Subtitle
-            Text(widget.data.subtitle, style: AppTheme.bodySM),
-            const SizedBox(height: 16),
-            // Action link
-            InkWell(
-              onTap: widget.data.onAction,
-              child: Text(
+              const SizedBox(height: 14),
+              Text(widget.data.title, style: AppTheme.titleMD),
+              const SizedBox(height: 6),
+              Text(widget.data.subtitle, style: AppTheme.bodySM),
+              const SizedBox(height: 16),
+              Text(
                 widget.data.actionLabel,
                 style: const TextStyle(
                   fontSize: 13,
@@ -163,11 +158,10 @@ class _QuickActionCardState extends State<_QuickActionCard> {
                   color: AppTheme.primaryGreen,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
-

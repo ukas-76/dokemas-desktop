@@ -1,30 +1,55 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dokemas_dekstop/main.dart';
+import 'package:dokemas_dekstop/models/user_model.dart';
+import 'package:dokemas_dekstop/screens/admin_dashboard_screen.dart';
+import 'package:dokemas_dekstop/services/api_service.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  setUp(() {
+    ApiService.authToken = null;
+    ApiService.currentUser = null;
+  });
+
+  testWidgets('Menampilkan halaman Login Super Admin saat belum terautentikasi',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
     await tester.pumpWidget(const DokemasAdminApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Super Admin Portal'), findsOneWidget);
+    expect(find.text('Masuk ke Dashboard'), findsOneWidget);
+    expect(find.text('Lupa Kata Sandi?'), findsOneWidget);
+    expect(find.text('Masuk ke Admin Panel'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('AdminDashboardScreen menampilkan 6 menu navigasi utama',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    ApiService.authToken = 'test-token';
+    ApiService.currentUser = const UserModel(
+      id: 1,
+      name: 'Budi Admin',
+      email: 'admin@dokemas.id',
+      role: 'super_admin',
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(home: AdminDashboardScreen()),
+    );
+
+    expect(find.text('Beranda'), findsOneWidget);
+    expect(find.text('Kelola Wisata & Hotel'), findsOneWidget);
+    expect(find.text('Kelola User & Mitra'), findsOneWidget);
+    expect(find.text('Verifikasi Mitra'), findsOneWidget);
+    expect(find.text('Moderasi Ulasan'), findsOneWidget);
+    expect(find.text('Laporan & Statistik'), findsOneWidget);
+    expect(find.text('Halo, Budi!'), findsOneWidget);
   });
 }
